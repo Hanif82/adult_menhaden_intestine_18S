@@ -1,0 +1,52 @@
+#contains pipeline commands 
+
+multiple_join_paired_ends.py -i gz_files/ -o paired_reads
+
+multiple_split_libraries_fastq.py -i paired_reads/ -o split_libraries/ --include_input_dir_path --remove_filepath_in_name
+
+identify_chimeric_seqs.py -i split_libraries/seqs.fna -o chimara_analysis/ --suppress_usearch61_ref --split_by_sampleid  -m usearch61
+#was stopped by cntl+z as script had timed out at sample B1F1
+#B1F1 seqs were removed by:
+filter_fasta.py -f split_libraries/seqs.fna -o fasta_files/seqs_wo_B1F1.fna -p B1F118S -n
+grep B1F118S -c fasta_files/seqs_wo_B1F1.fna  #check for successful removal of B1F118S seqs
+
+identify_chimeric_seqs.py -i fasta_files/seqs_wo_B1F1.fna -o chimara_analysis/ --suppress_usearch61_ref --split_by_sampleid  -m usearch61
+#was stopped by cntl+z as script had timed out at sample B3H1
+#given the large number of samples and reads per sample sequenced in the seqs.fna file were divided by fish ID (ex. B1, B2, B3...) using the 
+#filter_fasta.py script. 
+filter_fasta.py -f split_libraries/seqs.fna -o fasta_files/seqs_B1.fna -p B1
+filter_fasta.py -f split_libraries/seqs.fna -o fasta_files/seqs_B2.fna -p B2 
+filter_fasta.py -f split_libraries/seqs.fna -o fasta_files/seqs_B3.fna -p B3
+filter_fasta.py -f split_libraries/seqs.fna -o fasta_files/seqs_B4.fna -p B4
+filter_fasta.py -f split_libraries/seqs.fna -o fasta_files/seqs_C2.fna -p C2
+filter_fasta.py -f split_libraries/seqs.fna -o fasta_files/seqs_D1.fna -p D1
+filter_fasta.py -f split_libraries/seqs.fna -o fasta_files/seqs_D2.fna -p D2
+
+#grep function was used to make sure correct seqs were removed. example
+grep D1 -c fasta_files/seqs_B2.fna
+grep B2 -c fasta_files/seqs_B2.fna
+
+#chimera detection was continued using the resulting files
+identify_chimeric_seqs.py -i fasta_files/seqs_B1.fna -o chimara_anaylsis/B1/ --suppress_usearch61_ref --split_by_sampleid -m usearch61
+identify_chimeric_seqs.py -i fasta_files/seqs_B2.fna -o chimara_anaylsis/B2/ --suppress_usearch61_ref --split_by_sampleid -m usearch61
+identify_chimeric_seqs.py -i fasta_files/seqs_C2.fna -o chimara_anaylsis/C2/ --suppress_usearch61_ref --split_by_sampleid -m usearch61
+identify_chimeric_seqs.py -i fasta_files/seqs_D1.fna -o chimara_anaylsis/D1/ --suppress_usearch61_ref --split_by_sampleid -m usearch61
+identify_chimeric_seqs.py -i fasta_files/seqs_D2.fna -o chimara_anaylsis/D2/ --suppress_usearch61_ref --split_by_sampleid -m usearch61
+#samples B4M318S in seqs_B4.fna and B3H118S in seqs_B3.fna caused the identify_chimera_seqs.py to time out. 
+#these sequences were removed and put in a stand alone file
+filter_fasta.py -f fasta_files/seqs_B3.fna -o fasta_files/seqs_B3H118S.fna  -p B3H118S    #generates file with only B3H118S seqs
+filter_fasta.py -f fasta_files/seqs_B3.fna -o fasta_files/seqs_B3woB3H118S.fna  -p B3H118S -n #generates file with B3H118S seqs omitted
+filter_fasta.py -f fasta_files/seqs_B4.fna -o fasta_files/seqs_B4woB4M318S.fna -p B4M318S -n #generates file with B4M2118S seqs omitted
+filter_fasta.py -f fasta_files/seqs_B4.fna -o fasta_files/seqs_B4M318S.fna -p B4M318S  #generates file with only B4M2118S seqs 
+
+#check#ed if seqs were removed using grep ex.
+grep B3H1 fasta_files/seqs_B3H118S.fna -c
+grep B3F1 fasta_files/seqs_B3H118S.fna -c
+grep B4M3 -c fasta_files/seqs_B4M318S.fna
+grep B4M3 -c fasta_files/seqs_B4woB4M318S.fna
+
+#chimera detection on files with seqs removed
+identify_chimeric_seqs.py -i fasta_files/seqs_B4woB4M318S.fna -o chimara_anaylsis/B4 --suppress_usearch61_ref --split_by_sampleid -m usearch61
+identify_chimeric_seqs.py -i fasta_files/seqs_B3woB3H118S.fna -o chimara_anaylsis/B3/ --suppress_usearch61_ref --split_by_sampleid -m usearch61
+
+
