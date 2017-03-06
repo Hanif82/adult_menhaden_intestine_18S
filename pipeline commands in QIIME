@@ -39,7 +39,7 @@ filter_fasta.py -f fasta_files/seqs_B3.fna -o fasta_files/seqs_B3woB3H118S.fna  
 filter_fasta.py -f fasta_files/seqs_B4.fna -o fasta_files/seqs_B4woB4M318S.fna -p B4M318S -n #generates file with B4M2118S seqs omitted
 filter_fasta.py -f fasta_files/seqs_B4.fna -o fasta_files/seqs_B4M318S.fna -p B4M318S  #generates file with only B4M2118S seqs 
 
-#check#ed if seqs were removed using grep ex.
+#grep function was used to make sure correct seqs were removed. example
 grep B3H1 fasta_files/seqs_B3H118S.fna -c
 grep B3F1 fasta_files/seqs_B3H118S.fna -c
 grep B4M3 -c fasta_files/seqs_B4M318S.fna
@@ -49,4 +49,41 @@ grep B4M3 -c fasta_files/seqs_B4woB4M318S.fna
 identify_chimeric_seqs.py -i fasta_files/seqs_B4woB4M318S.fna -o chimara_anaylsis/B4 --suppress_usearch61_ref --split_by_sampleid -m usearch61
 identify_chimeric_seqs.py -i fasta_files/seqs_B3woB3H118S.fna -o chimara_anaylsis/B3/ --suppress_usearch61_ref --split_by_sampleid -m usearch61
 
+#chimera detection on removed samples (B1F118S, B3H118S, B4M318S)
+#split function was used to split files nearly in half
+wc -l fasta_files/seqs_B1F118S.fna
+split -l 641158 fasta_files/seqs_B1F118S.fna
+#split funtion returned two files xaa and xab. These files were renamed seqs_B1F118Sa.fna and seqs_B1F118Sb.fna. indentify_chimeric_seqs.py
+#was used on these files.
+identify_chimeric_seqs.py -i fasta_files/seqs_B1F118Sa.fna -o chimara_anaylsis/B1/B1F118S/a --suppress_usearch61_ref -m usearch61
+identify_chimeric_seqs.py -i fasta_files/seqs_B1F118Sb.fna -o chimara_anaylsis/B1/B1F118S/b --suppress_usearch61_ref -m usearch61
+#this was repeated for B3H118S and B4M318S successfully
+wc -l fasta_files/seqs_B3H118S.fna 
+split -l 597380 fasta_files/seqs_B3H118S.fna 
+identify_chimeric_seqs.py -i fasta_files/seqs_B3H118Sa.fna -o chimara_anaylsis/B3/B3H118S/a/ --suppress_usearch61_ref -m usearch61
+identify_chimeric_seqs.py -i fasta_files/seqs_B3H118Sb.fna -o chimara_anaylsis/B3/B3H118S/b/ --suppress_usearch61_ref -m usearch61
 
+wc -l fasta_files/seqs_B4M318S.fna 
+split -l 609380 fasta_files/seqs_B4M318S.fna
+identify_chimeric_seqs.py -i fasta_files/seqs_B4M318Sa.fna -o chimara_anaylsis/B4/B4M318S/a --suppress_usearch61_ref -m usearch61
+identify_chimeric_seqs.py -i fasta_files/seqs_B4M318Sb.fna -o chimara_anaylsis/B4/B4M318S/b --suppress_usearch61_ref -m usearch61
+
+#merging resulting chimeras.txt files from all chimeric analysis
+cat chimara_anaylsis/B1/chimeras.txt chimara_anaylsis/B1/B1F118S/a/chimeras.txt > chimara_anaylsis/chimeras_all.txt
+cat chimara_anaylsis/B1/B1F118S/b/chimeras.txt >> chimara_anaylsis/chimeras_all.txt  
+cat chimara_anaylsis/B2/chimeras.txt >> chimara_anaylsis/chimeras_all.txt 
+cat chimara_anaylsis/B3/chimeras.txt >> chimara_anaylsis/chimeras_all.txt 
+cat chimara_anaylsis/B3/B3H118S/a/chimeras.txt >> chimara_anaylsis/chimeras_all.txt 
+cat chimara_anaylsis/B3/B3H118S/b/chimeras.txt >> chimara_anaylsis/chimeras_all.txt 
+cat chimara_anaylsis/B4/chimeras.txt >> chimara_anaylsis/chimeras_all.txt 
+cat chimara_anaylsis/B4/B4M318S/a/chimeras.txt >> chimara_anaylsis/chimeras_all.txt 
+cat chimara_anaylsis/B4/B4M318S/b/chimeras.txt >> chimara_anaylsis/chimeras_all.txt 
+cat chimara_anaylsis/C2/chimeras.txt >> chimara_anaylsis/chimeras_all.txt 
+cat chimara_anaylsis/D1/chimeras.txt >> chimara_anaylsis/chimeras_all.txt 
+cat chimara_anaylsis/D2/chimeras.txt >> chimara_anaylsis/chimeras_all.txt
+
+#removing identified chimeric sequences
+filter_fasta.py -f split_libraries/seqs.fna -o chi_seqs.fna -s chimara_anaylsis/chimeras_all.txt -n 
+
+#identifying and removing PhiX sequences
+parallel_blast.py -i fasta_files/chi_seqs.fna -o phix_results/ -r /Volumes/Data/Menhaden/phiX.fasta
