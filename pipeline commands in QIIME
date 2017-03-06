@@ -87,3 +87,6 @@ filter_fasta.py -f split_libraries/seqs.fna -o chi_seqs.fna -s chimara_anaylsis/
 
 #identifying and removing PhiX sequences
 parallel_blast.py -i fasta_files/chi_seqs.fna -o phix_results/ -r /Volumes/Data/Menhaden/phiX.fasta
+grep "^#" -v -c phix_results/chi_seqs_blast_out.txt
+grep "^#" -v phix_results/chi_seqs_blast_out.txt > phix_results/phix_seqs.txt
+filter_fasta.py -f fasta_files/chi_seqs.fna -o fasta_files/chi_phi_seqs.fna -s phix_results/phix_seqs.txt -n 
