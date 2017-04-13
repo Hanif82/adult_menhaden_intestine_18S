@@ -96,3 +96,10 @@ filter_fasta.py -f fasta_files/chi_seqs.fna -o fasta_files/chi_phi_seqs.fna -s p
 multiple_join_paired_ends.py -i gz_files_0331/ -o paired_reads_0331/
 multiple_split_libraries_fastq.py -i paired_reads_0331/ -o split_libraries_0331/ --include_input_dir_path --remove_filepath_in_name
 identify_chimeric_seqs.py -i split_libraries_0331/seqs.fna -o chimara_anaylsis/0331/ --suppress_usearch61_ref --split_by_sampleid -m usearch61
+#added chimera_analysis/0331/chimeras.txt to chimeras_all.txt
+cat chimara_anaylsis/0331/chimeras.txt >> chimara_anaylsis/chimeras_all.txt
+#this however was unnessasary
+#removal of chimeric sequences from 0331 sequence set
+filter_fasta.py -f split_libraries_0331/seqs.fna -o fasta_files/chi_0331.fna -s chimara_anaylsis/0331/chimeras.txt -n
+#identifying and removin PhiX sequences
+parallel_blast.py -i fasta_files/chi_0331.fna -o fasta_files/chi_phi_0331.fna -r /Volumes/Data/Menhaden/phiX.fasta
